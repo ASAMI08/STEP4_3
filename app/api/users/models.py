@@ -50,7 +50,29 @@ class UserModel:
                 INSERT INTO users (name, password, category_id, last_login_at) 
                 VALUES (%s, %s, %s, NOW())
                 """
-                cursor.execute(sql, (user.name, password, user.category_id))
+                cursor.execute(sql, (user.name, password, user.category_id if hasattr(user, 'category_id') else None))
+                user_id = cursor.lastrowid
+            connection.close()
+            
+            return user_id
+        except Exception as e:
+            print(f"Database error: {e}")
+            return None
+    
+    @staticmethod
+    def create_with_categories(name: str, password: str, categories: str = None):
+        """カテゴリー付きでユーザーを作成"""
+        try:
+            connection = get_db_connection()
+            with connection.cursor() as cursor:
+                # ユーザーテーブルにcategoriesカラムがない場合は追加する必要があります
+                # ALTER TABLE users ADD COLUMN categories VARCHAR(255);
+                
+                sql = """
+                INSERT INTO users (name, password, categories, last_login_at) 
+                VALUES (%s, %s, %s, NOW())
+                """
+                cursor.execute(sql, (name, password, categories))
                 user_id = cursor.lastrowid
             connection.close()
             
